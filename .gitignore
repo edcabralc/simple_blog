@@ -1,0 +1,6 @@
+/node_modules
+**/tmp/*
+/public/images/cover/*
+**/generated
+.env
+
