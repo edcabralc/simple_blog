@@ -1,9 +1,24 @@
 import { prisma } from "@libs/prisma";
 import bcrypt from "bcryptjs";
-import { UserType } from "types/user.type";
+import { User } from "../../generated/prisma/client";
 
 const userService = {
-  create: async ({ name, email, password }: UserType) => {
+  getUserById: async (id: string) => {
+    return await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+  },
+
+  create: async ({
+    name,
+    email,
+    password,
+  }: Pick<User, "name" | "email" | "password">) => {
     email = email.toLocaleLowerCase();
     const user = await prisma.user.findFirst({ where: { email } });
 
@@ -18,10 +33,7 @@ const userService = {
     });
   },
 
-  verifyUser: async ({
-    email,
-    password,
-  }: Pick<UserType, "email" | "password">) => {
+  verifyUser: async ({ email, password }: Pick<User, "email" | "password">) => {
     const user = await prisma.user.findFirst({ where: { email } });
 
     if (!user) {

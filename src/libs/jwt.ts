@@ -1,6 +1,14 @@
 import jwt from "jsonwebtoken";
 
-const createJwt = (payload: any) =>
+const createJWT = (payload: any) =>
   jwt.sign(payload, process.env.JWT_KEY as string);
 
-export { createJwt };
+const readJWT = (token: string) => {
+  try {
+    return jwt.verify(token, process.env.JWT_KEY as string);
+  } catch (error) {
+    return false;
+  }
+};
+
+export { createJWT, readJWT };

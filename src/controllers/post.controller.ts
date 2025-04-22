@@ -1,4 +1,4 @@
-import { postService } from "@services/post.services";
+import { postService } from "@services/post.service";
 import { RequestHandler } from "express";
 
 const postController: { [key: string]: RequestHandler } = {

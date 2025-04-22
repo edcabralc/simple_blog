@@ -1,5 +1,5 @@
-import { authService } from "@services/auth.services";
-import { userService } from "@services/user.services";
+import { authService } from "@services/auth.service";
+import { userService } from "@services/user.service";
 import { RequestHandler } from "express";
 import { z } from "zod";
 
@@ -18,7 +18,9 @@ const authController: { [keys: string]: RequestHandler } = {
       return;
     }
 
-    const newUser = await userService.create(data.data);
+    const { name, email, password } = data.data;
+
+    const newUser = await userService.create({ name, email, password });
 
     if (!newUser) {
       res.status(400).json({ error: "Erro ao criar usuário" });
@@ -66,7 +68,9 @@ const authController: { [keys: string]: RequestHandler } = {
     });
   },
 
-  validate: (req, res) => {},
+  validate: (req, res) => {
+    const { authorization } = req.headers;
+  },
 };
 
 export { authController };
