@@ -1,6 +1,7 @@
 import { authService } from "@services/auth.service";
 import { userService } from "@services/user.service";
 import { RequestHandler } from "express";
+import { ExtendedRequest } from "types/extended-request";
 import { z } from "zod";
 
 const authController: { [keys: string]: RequestHandler } = {
@@ -46,7 +47,6 @@ const authController: { [keys: string]: RequestHandler } = {
     });
 
     const data = schema.safeParse(req.body);
-    console.log(data);
 
     if (!data.success) {
       res.status(400).json({ error: data.error?.flatten().fieldErrors });
@@ -68,8 +68,8 @@ const authController: { [keys: string]: RequestHandler } = {
     });
   },
 
-  validate: (req, res) => {
-    const { authorization } = req.headers;
+  validate: (req: ExtendedRequest, res) => {
+    res.json({ user: req.user });
   },
 };
 

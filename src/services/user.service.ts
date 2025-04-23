@@ -10,6 +10,7 @@ const userService = {
         id: true,
         name: true,
         email: true,
+        status: true,
       },
     });
   },

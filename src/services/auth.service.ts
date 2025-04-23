@@ -10,11 +10,14 @@ const authService = {
 
     if (authorization) {
       const authSplit = authorization.split("Bearer ");
+
       if (authSplit[1]) {
         const payload = readJWT(authSplit[1]);
+
         if (payload) {
           const userId = (payload as TokenPaylod).id;
           const user = await userService.getUserById(userId);
+
           if (user) {
             return user;
           }
