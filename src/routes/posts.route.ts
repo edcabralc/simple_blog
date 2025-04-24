@@ -5,9 +5,9 @@ import { privateRoute } from "middlewares/private-route";
 
 const postRoutes = Router();
 
-postRoutes.get("/", postController.getAll);
-
-postRoutes.get("/:slug", postController.getById);
+postRoutes.get("/", privateRoute, postController.getAll);
+postRoutes.get("/:slug", privateRoute, postController.getBySlug);
+postRoutes.get("/:id", privateRoute, postController.getById);
 
 postRoutes.post(
   "/",
@@ -16,8 +16,13 @@ postRoutes.post(
   postController.create
 );
 
-postRoutes.put("/:slug", postController.update);
+postRoutes.put(
+  "/:slug",
+  privateRoute,
+  upload.single("cover"),
+  postController.update
+);
 
-postRoutes.delete("/:slug", postController.delete);
+postRoutes.delete("/:slug", privateRoute, postController.delete);
 
 export { postRoutes };

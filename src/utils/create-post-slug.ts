@@ -1,8 +1,8 @@
 import { postService } from "@services/post.service";
-import slug from "slug";
+import slugify from "slugify";
 
 const createPostSlug = async (title: string) => {
-  let newSlug = slug(title);
+  let newSlug = slugify(title);
   let keepTrying = true;
   let postCount = 1;
 
@@ -11,7 +11,7 @@ const createPostSlug = async (title: string) => {
     if (!post) {
       keepTrying = false;
     } else {
-      newSlug = slug(`${title} ${++postCount}`);
+      newSlug = slugify(`${title} ${++postCount}`);
     }
   }
   return newSlug;

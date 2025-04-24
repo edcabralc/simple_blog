@@ -5,41 +5,82 @@ import { createPostSlug } from "@utils/create-post-slug";
 import { handleUplodCover } from "@utils/upload-cover";
 import { RequestHandler } from "express";
 import { ExtendedRequest } from "types/extended-request";
-import { z } from "zod";
+import { postValidator } from "validators/post.validator";
 
 const postController: { [key: string]: RequestHandler } = {
-  getAll: async (req, res) => {
-    const post = await postService.getAll();
+  getAll: async (req: ExtendedRequest, res) => {
+    let page = 1;
+    if (req.query.page) {
+      page = parseInt(req.query.parse as string);
+
+      if (page <= 0) {
+        res.status(404).json({ error: "Página não econtrada" });
+        return;
+      }
+    }
+
+    const postsToReturn = await postService.getAll(page);
+
+    postsToReturn.map(post => ({
+      id: post.id,
+      status: post.status,
+      title: post.status,
+      createdAt: post.createdAt,
+      cover: coverToURL(post.cover),
+      authorName: post.author?.name,
+      tags: post.tags,
+      slug: post.slug,
+    }));
+
+    res.status(200).json({ posts: postsToReturn, page });
+  },
+
+  getById: async (req: ExtendedRequest, res) => {
+    const { id } = req.params;
+    console.log(id);
+
+    const post = await postService.getById(id);
+
+    if (!post) {
+      res.status(404).json({ error: "Post não encontrado" });
+      return;
+    }
+
     res.status(200).json(post);
   },
 
-  getById: (req, res) => {},
+  getBySlug: async (req: ExtendedRequest, res) => {
+    const { slug } = req.params;
+    console.log(slug);
+
+    const post = await postService.getBySlug(slug);
+
+    if (!post) {
+      res.status(404).json({ error: "Post não encontrado" });
+      return;
+    }
+
+    res.status(200).json(post);
+  },
 
   create: async (req: ExtendedRequest, res) => {
-    const schema = z.object({
-      title: z.string(),
-      tag: z.string(),
-      body: z.string(),
-    });
-
     if (!req.user) {
       return;
     }
 
-    const data = schema.safeParse(req.body);
+    const data = postValidator.create(req.body);
 
     if (!data.success) {
-      res.status(500).json({ error: data.error.flatten().fieldErrors });
+      res.status(400).json({ error: data.error.flatten().fieldErrors });
       return;
     }
 
     if (!req.file) {
-      res.status(500).json({ error: "Arquivo não enviado" });
+      res.status(400).json({ error: "Arquivo não enviado" });
       return;
     }
 
     const coverName = await handleUplodCover(req.file);
-    console.log(coverName);
 
     if (!coverName) {
       res.status(400).json({ error: "Imagem não permitida/enviada" });
@@ -62,7 +103,7 @@ const postController: { [key: string]: RequestHandler } = {
     res.status(201).json({
       post: {
         id: newPost.id,
-        slug: newPost.id,
+        slug: newPost.slug,
         title: newPost.title,
         createdAt: newPost.createdAt,
         cover: coverToURL(newPost.cover),
@@ -72,9 +113,64 @@ const postController: { [key: string]: RequestHandler } = {
     });
   },
 
-  update: (req, res) => {},
+  update: async (req: ExtendedRequest, res) => {
+    const { slug } = req.params;
 
-  delete: (req, res) => {},
+    const data = postValidator.update(req.body);
+
+    if (!data.success) {
+      res.status(401).json({ error: data.error.flatten().fieldErrors });
+      return;
+    }
+
+    const post = await postService.getBySlug(slug);
+
+    if (!post) {
+      res.status(404).json({ error: "Post não encontrado" });
+      return;
+    }
+
+    let coverName: string | false = false;
+
+    if (req.file) {
+      coverName = await handleUplodCover(req.file);
+    }
+
+    const updatedPost = await postService.update(slug, {
+      status: data.data.status ?? undefined,
+      title: data.data.title ?? undefined,
+      tags: data.data.tags ?? undefined,
+      body: data.data.body ?? undefined,
+      cover: coverName ? coverName : undefined,
+    });
+
+    const author = await userService.getUserById(updatedPost.authorId);
+
+    res.status(202).json({
+      post: {
+        id: updatedPost.id,
+        status: updatedPost.status,
+        slug: updatedPost.slug,
+        tags: updatedPost.tags,
+        cover: coverToURL(updatedPost.cover),
+        author: author?.name,
+      },
+    });
+  },
+
+  delete: async (req: ExtendedRequest, res) => {
+    const { slug } = req.params;
+
+    const post = await postService.getBySlug(slug);
+
+    if (!post) {
+      res.status(404).json({ error: "Post não encontrado" });
+      return;
+    }
+
+    await postService.delete(post.slug);
+    res.status(204).json({ error: null });
+  },
 };
 
 export { postController };

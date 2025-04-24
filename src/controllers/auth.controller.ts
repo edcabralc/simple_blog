@@ -2,24 +2,18 @@ import { authService } from "@services/auth.service";
 import { userService } from "@services/user.service";
 import { RequestHandler } from "express";
 import { ExtendedRequest } from "types/extended-request";
-import { z } from "zod";
+import { authValidador } from "validators/auth.validator";
 
 const authController: { [keys: string]: RequestHandler } = {
   signup: async (req, res) => {
-    const schema = z.object({
-      name: z.string(),
-      email: z.string().email(),
-      password: z.string(),
-    });
+    const singupParsed = authValidador.signup(req.body);
 
-    const data = schema.safeParse(req.body);
-
-    if (!data.success) {
-      res.status(400).json({ error: data.error.flatten().fieldErrors });
+    if (!singupParsed.success) {
+      res.status(400).json({ error: singupParsed.error.flatten().fieldErrors });
       return;
     }
 
-    const { name, email, password } = data.data;
+    const { name, email, password } = singupParsed.data;
 
     const newUser = await userService.create({ name, email, password });
 
@@ -41,19 +35,16 @@ const authController: { [keys: string]: RequestHandler } = {
   },
 
   signin: async (req, res) => {
-    const schema = z.object({
-      email: z.string().email(),
-      password: z.string(),
-    });
+    const signinParsed = authValidador.signin(req.body);
 
-    const data = schema.safeParse(req.body);
-
-    if (!data.success) {
-      res.status(400).json({ error: data.error?.flatten().fieldErrors });
+    if (!signinParsed.success) {
+      res
+        .status(400)
+        .json({ error: signinParsed.error?.flatten().fieldErrors });
       return;
     }
 
-    const user = await userService.verifyUser(data.data);
+    const user = await userService.verifyUser(signinParsed.data);
 
     if (!user) {
       res.status(401).json({ error: "Acesso negado" });
