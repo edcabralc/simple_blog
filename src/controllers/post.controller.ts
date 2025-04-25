@@ -11,7 +11,7 @@ const postController: { [key: string]: RequestHandler } = {
   getAll: async (req: ExtendedRequest, res) => {
     let page = 1;
     if (req.query.page) {
-      page = parseInt(req.query.parse as string);
+      page = parseInt(req.query.page as string);
 
       if (page <= 0) {
         res.status(404).json({ error: "Página não econtrada" });
@@ -40,6 +40,7 @@ const postController: { [key: string]: RequestHandler } = {
     console.log(id);
 
     const post = await postService.getById(id);
+    console.log(post);
 
     if (!post) {
       res.status(404).json({ error: "Post não encontrado" });
@@ -51,6 +52,7 @@ const postController: { [key: string]: RequestHandler } = {
 
   getBySlug: async (req: ExtendedRequest, res) => {
     const { slug } = req.params;
+
     console.log(slug);
 
     const post = await postService.getBySlug(slug);

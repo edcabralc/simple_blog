@@ -7,7 +7,7 @@ const createPostSlug = async (title: string) => {
   let postCount = 1;
 
   while (keepTrying) {
-    const post = await postService.getPostBySlug(newSlug);
+    const post = await postService.getBySlug(newSlug);
     if (!post) {
       keepTrying = false;
     } else {
